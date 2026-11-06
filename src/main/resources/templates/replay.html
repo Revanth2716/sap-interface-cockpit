@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Replay queue')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav('replay')}"></nav>
+
+<div class="page">
+  <div class="page-head">
+    <h1>Replay queue</h1>
+    <p>Re-processing a failed message, with the attempt recorded. A timeout or a
+       lock succeeds on the retry; a configuration cause fails again - and needs a fix,
+       not a retry.</p>
+  </div>
+
+  <div class="notice notice-error" th:if="${error}" th:text="${error}">Error</div>
+  <div class="notice notice-ok" th:if="${param.queued}">
+    Message <strong th:text="${param.queued}">ID</strong> was queued.
+  </div>
+  <div class="notice notice-ok" th:if="${param.played}">
+    Queue entry <strong th:text="${param.played}">ID</strong> was processed.
+  </div>
+
+  <div class="panel">
+    <h2>Queue <span class="hint" th:text="${#lists.size(queue)} + ' entries'">0 entries</span></h2>
+    <div class="scroll">
+      <table>
+        <thead>
+          <tr><th>Queue</th><th>Message</th><th>Interface</th><th>State</th><th>Queued</th>
+            <th>Played</th><th>By</th><th>Result</th><th class="no-print"></th></tr>
+        </thead>
+        <tbody>
+          <tr th:each="entry : ${queue}">
+            <td class="nowrap"><code th:text="${entry.queueId}">QID</code></td>
+            <td class="nowrap"><code th:text="${entry.messageId}">MSG</code></td>
+            <td class="nowrap">
+              <a th:href="@{'/interfaces/' + ${entry.interfaceName}}"><code th:text="${entry.interfaceName}">IFACE</code></a>
+            </td>
+            <td class="nowrap">
+              <span class="status" th:classappend="'status-' + ${#strings.toLowerCase(entry.state)}"
+                    th:text="${entry.state}">STATE</span>
+            </td>
+            <td class="muted small nowrap" th:text="${entry.queuedAtDisplay}">TS</td>
+            <td class="muted small nowrap" th:text="${entry.playedAtDisplay}">TS</td>
+            <td class="muted small nowrap" th:text="${entry.playedBy}">WHO</td>
+            <td class="small muted" th:text="${entry.result}">RESULT</td>
+            <td class="nowrap no-print">
+              <form th:action="@{'/replay/' + ${entry.queueId} + '/play'}" method="post"
+                    th:if="${entry.state == 'QUEUED'}">
+                <button class="small" type="submit">Replay now</button>
+              </form>
+            </td>
+          </tr>
+          <tr th:if="${#lists.isEmpty(queue)}">
+            <td colspan="9" class="muted center">The queue is empty.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Failed messages not queued yet
+      <span class="hint" th:text="${#lists.size(candidates)} + ' candidates'">0 candidates</span></h2>
+    <div class="scroll">
+      <table>
+        <thead>
+          <tr><th>Message</th><th>Interface</th><th>Error</th><th>When</th><th>Duration</th>
+            <th class="no-print"></th></tr>
+        </thead>
+        <tbody>
+          <tr th:each="message : ${candidates}">
+            <td class="nowrap"><code th:text="${message.messageId}">MSG</code></td>
+            <td class="nowrap">
+              <a th:href="@{'/interfaces/' + ${message.interfaceName}}"><code th:text="${message.interfaceName}">IFACE</code></a>
+            </td>
+            <td class="nowrap"><code th:text="${message.errorCode}">CODE</code></td>
+            <td class="muted small nowrap" th:text="${message.createdAtDisplay}">TS</td>
+            <td class="muted small nowrap" th:text="${message.durationMs} + ' ms'">0 ms</td>
+            <td class="nowrap no-print">
+              <form th:action="@{/replay/queue}" method="post">
+                <input type="hidden" name="messageId" th:value="${message.messageId}">
+                <button class="secondary small" type="submit">Queue</button>
+              </form>
+            </td>
+          </tr>
+          <tr th:if="${#lists.isEmpty(candidates)}">
+            <td colspan="6" class="muted center">Every failed message is already queued.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+</body>
+</html>

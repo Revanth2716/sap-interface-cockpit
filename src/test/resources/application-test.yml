@@ -1,0 +1,28 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:cockpittest;DB_CLOSE_DELAY=-1
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ""
+
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:db/schema.sql
+
+  thymeleaf:
+    cache: false
+
+logging:
+  level:
+    root: WARN
+    com.revzz.sap.cockpit: INFO
+
+cockpit:
+  seed-demo-users: true
+  seed-demo-data: true
+  demo-password: "demo1234"
+  seed:
+    days: 7
+    messages-per-day: 220
+    random-seed: 20261106

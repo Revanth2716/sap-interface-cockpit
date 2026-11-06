@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Interface detail')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav('interfaces')}"></nav>
+
+<div class="page">
+  <div class="page-head between">
+    <div>
+      <h1><code th:text="${report.interfaceName}">IFACE</code> - <span th:text="${report.description}">DESC</span></h1>
+      <p th:text="${report.type} + ' · ' + ${report.direction} + ' · owner ' + ${report.owner}
+                + ' · ' + ${report.system} + ' to ' + ${report.target}">Meta</p>
+    </div>
+    <a class="btn" th:href="@{/interfaces}">All interfaces</a>
+  </div>
+
+  <div class="kpis">
+    <div class="kpi">
+      <div class="label">Success rate</div>
+      <div class="value" th:classappend="${report.breaching()} ? 'critical' : 'low'"
+           th:text="${report.successRate} + '%'">0%</div>
+      <div class="sub" th:text="'SLA ' + ${report.slaPercent} + '%'">SLA</div>
+    </div>
+    <div class="kpi">
+      <div class="label">Messages</div>
+      <div class="value" th:text="${report.total}">0</div>
+      <div class="sub" th:text="${report.ok} + ' ok, ' + ${report.warnings} + ' warnings'">0 ok</div>
+    </div>
+    <div class="kpi">
+      <div class="label">Failed</div>
+      <div class="value critical" th:text="${report.errors}">0</div>
+      <div class="sub" th:text="'oldest ' + ${report.oldestFailureAgeHours} + ' h old'">oldest</div>
+    </div>
+    <div class="kpi">
+      <div class="label">p95 response</div>
+      <div class="value" th:text="${report.p95Ms} + ' ms'">0 ms</div>
+      <div class="sub" th:text="'avg ' + ${report.averageMs} + ' ms'">avg</div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Traffic - last 24 hours</h2>
+    <div class="trend-wrap" th:utext="${trend}">SVG</div>
+  </div>
+
+  <div class="panel" th:if="${#lists.size(clusters) > 0}">
+    <h2>What is failing here</h2>
+    <div class="scroll">
+      <table>
+        <thead><tr><th>Severity</th><th>Error</th><th>Count</th><th>Hosts</th><th>Cause</th><th>Remediation</th></tr></thead>
+        <tbody>
+          <tr th:each="cluster : ${clusters}">
+            <td class="nowrap">
+              <span class="sev" th:classappend="'sev-' + ${cluster.severity.cssClass()}"
+                    th:text="${cluster.severity}">SEV</span>
+            </td>
+            <td class="nowrap"><code th:text="${cluster.errorCode}">CODE</code></td>
+            <td class="nowrap" th:text="${cluster.occurrences}">0</td>
+            <td class="nowrap muted" th:text="${cluster.distinctHosts}">0</td>
+            <td class="small muted" th:text="${cluster.cause}">CAUSE</td>
+            <td class="small" th:text="${cluster.remediation}">REMEDY</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Recent messages</h2>
+    <div class="scroll">
+      <table>
+        <thead>
+          <tr><th>Message</th><th>When</th><th>Type</th><th>Status</th><th>Error</th>
+            <th>Duration</th><th>Host</th><th>Correlation</th></tr>
+        </thead>
+        <tbody>
+          <tr th:each="message : ${messages}">
+            <td class="nowrap"><code th:text="${message.messageId}">ID</code></td>
+            <td class="muted small nowrap" th:text="${message.createdAtDisplay}">TS</td>
+            <td class="nowrap muted" th:text="${message.messageType}">TYPE</td>
+            <td class="nowrap">
+              <span class="status" th:classappend="'status-' + ${#strings.toLowerCase(message.status)}"
+                    th:text="${message.status}">STATUS</span>
+            </td>
+            <td class="nowrap">
+              <code th:if="${message.errorCode}" th:text="${message.errorCode}">CODE</code>
+              <span class="muted" th:if="${message.errorCode == null}">-</span>
+            </td>
+            <td class="nowrap muted" th:text="${message.durationMs} + ' ms'">0 ms</td>
+            <td class="nowrap muted" th:text="${message.host}">HOST</td>
+            <td class="nowrap muted small" th:text="${message.correlationId}">CORR</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+</body>
+</html>

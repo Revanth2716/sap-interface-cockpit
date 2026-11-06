@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Interfaces')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav('interfaces')}"></nav>
+
+<div class="page">
+  <div class="page-head">
+    <h1>Interface catalogue</h1>
+    <p>Every interface, its SLA and what it has actually been doing in the last
+       <span th:text="${windowHours}">24</span> hours.</p>
+  </div>
+
+  <div class="panel">
+    <div class="scroll">
+      <table>
+        <thead>
+          <tr><th>Interface</th><th>Description</th><th>Type</th><th>Dir</th><th>Owner</th>
+            <th>System</th><th>Target</th><th>Success rate</th><th>SLA</th><th>Failed</th>
+            <th>Warnings</th><th>p95</th><th>Max</th><th>Oldest failure</th></tr>
+        </thead>
+        <tbody>
+          <tr th:each="report : ${reports}">
+            <td class="nowrap">
+              <a th:href="@{'/interfaces/' + ${report.interfaceName}}"><code th:text="${report.interfaceName}">IFACE</code></a>
+              <span class="sev sev-critical" th:if="${report.critical}">critical</span>
+            </td>
+            <td th:text="${report.description}">DESC</td>
+            <td class="nowrap"><span class="pill" th:text="${report.type}">TYPE</span></td>
+            <td class="nowrap muted" th:text="${report.direction}">DIR</td>
+            <td class="nowrap" th:text="${report.owner}">OWNER</td>
+            <td class="nowrap muted" th:text="${report.system}">SYS</td>
+            <td class="nowrap muted" th:text="${report.target}">TGT</td>
+            <td>
+              <div class="meter">
+                <div class="track">
+                  <div class="fill" th:classappend="${report.breaching()} ? 'breach' : ''"
+                       th:style="'width:' + ${report.successRate} + '%'"></div>
+                </div>
+                <span class="value" th:text="${report.successRate} + '%'">0%</span>
+              </div>
+            </td>
+            <td class="nowrap muted" th:text="${report.slaPercent} + '%'">0%</td>
+            <td class="nowrap" th:text="${report.errors}">0</td>
+            <td class="nowrap muted" th:text="${report.warnings}">0</td>
+            <td class="nowrap muted" th:text="${report.p95Ms} + ' ms'">0 ms</td>
+            <td class="nowrap muted" th:text="${report.maxMs} + ' ms'">0 ms</td>
+            <td class="nowrap muted" th:text="${report.oldestFailureAgeHours} + ' h'">0 h</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+</body>
+</html>

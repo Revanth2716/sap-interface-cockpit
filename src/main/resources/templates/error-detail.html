@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Error code')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav('errors')}"></nav>
+
+<div class="page">
+  <div class="page-head">
+    <h1><code th:text="${code.code}">CODE</code></h1>
+    <p th:text="'Severity ' + ${code.severity} + ' · ' + (${code.common} ? 'a known recurring cause' : 'unclassified cause')">
+      Severity</p>
+  </div>
+
+  <div class="grid cols-2">
+    <div class="panel">
+      <h2>What it means</h2>
+      <p th:text="${code.cause}">CAUSE</p>
+    </div>
+    <div class="panel">
+      <h2>What to do</h2>
+      <p th:text="${code.remediation}">REMEDY</p>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Where it is happening <span class="hint" th:text="${#lists.size(clusters)} + ' interfaces'">0</span></h2>
+    <div class="scroll">
+      <table>
+        <thead><tr><th>Interface</th><th>Occurrences</th><th>Hosts</th><th>Success rate</th><th>Last seen</th></tr></thead>
+        <tbody>
+          <tr th:each="cluster : ${clusters}">
+            <td class="nowrap">
+              <a th:href="@{'/interfaces/' + ${cluster.interfaceName}}"><code th:text="${cluster.interfaceName}">IFACE</code></a>
+            </td>
+            <td class="nowrap" th:text="${cluster.occurrences}">0</td>
+            <td class="nowrap muted" th:text="${cluster.distinctHosts}">0</td>
+            <td class="nowrap" th:text="${cluster.successRate} + '%'">0%</td>
+            <td class="nowrap muted small" th:text="${cluster.lastSeenEpochMs} > 0 ? 'in the window' : '-'">-</td>
+          </tr>
+          <tr th:if="${#lists.isEmpty(clusters)}">
+            <td colspan="5" class="muted center">This error is not happening right now.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+</body>
+</html>

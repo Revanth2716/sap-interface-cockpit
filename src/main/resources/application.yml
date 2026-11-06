@@ -1,0 +1,68 @@
+server:
+  port: 8082
+  servlet:
+    session:
+      timeout: 30m
+      cookie:
+        http-only: true
+        same-site: lax
+
+spring:
+  application:
+    name: "SAP Interface Cockpit"
+
+  datasource:
+    url: jdbc:h2:file:./data/cockpitdb;AUTO_SERVER=TRUE;DB_CLOSE_DELAY=-1
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ""
+
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:db/schema.sql
+
+  thymeleaf:
+    cache: true
+    encoding: UTF-8
+
+  mail:
+    host: localhost
+    port: 1025
+
+logging:
+  level:
+    root: INFO
+    com.revzz.sap.cockpit: INFO
+
+# ---------------------------------------------------------------------------
+# Application configuration
+# ---------------------------------------------------------------------------
+cockpit:
+  application-name: "SAP Interface Cockpit"
+  sap-system: "NW7"
+  seed-demo-users: true
+  seed-demo-data: true
+  demo-password: "demo1234"
+
+  # How the seeded traffic is generated - seven days of history.
+  seed:
+    days: 7
+    messages-per-day: 220
+    random-seed: 20261106
+
+  monitoring:
+    # The window the SLA and the alerting rules look at.
+    sla-window-hours: 24
+    # An interface with more failures than this inside the window is an incident.
+    failure-burst-threshold: 5
+    # A failure older than this is "ageing" and needs an owner.
+    ageing-hours: 12
+    # p95 latency above this (milliseconds) breaches the latency target.
+    latency-threshold-ms: 2500
+
+  mail:
+    enabled: false
+    from: "cockpit@example.com"
+    to: "integration-ops@example.com"
+    subject-prefix: "[SAP Interface Cockpit]"

@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Error catalogue')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav('errors')}"></nav>
+
+<div class="page">
+  <div class="page-head">
+    <h1>Error catalogue and triage</h1>
+    <p>What each error code means, what causes it, and what to do about it.</p>
+  </div>
+
+  <div class="panel">
+    <h2>Failures right now <span class="hint">grouped into one problem per interface and cause</span></h2>
+    <div class="scroll">
+      <table>
+        <thead><tr><th>Severity</th><th>Interface</th><th>Error</th><th>Count</th><th>Hosts</th>
+          <th>Age</th><th>Cause</th><th>Remediation</th></tr></thead>
+        <tbody>
+          <tr th:each="cluster : ${clusters}">
+            <td class="nowrap">
+              <span class="sev" th:classappend="'sev-' + ${cluster.severity.cssClass()}"
+                    th:text="${cluster.severity}">SEV</span>
+            </td>
+            <td class="nowrap">
+              <a th:href="@{'/interfaces/' + ${cluster.interfaceName}}"><code th:text="${cluster.interfaceName}">IFACE</code></a>
+            </td>
+            <td class="nowrap">
+              <a th:href="@{'/errors/' + ${cluster.errorCode}}"><code th:text="${cluster.errorCode}">CODE</code></a>
+            </td>
+            <td class="nowrap" th:text="${cluster.occurrences}">0</td>
+            <td class="nowrap muted" th:text="${cluster.distinctHosts}">0</td>
+            <td class="nowrap muted" th:text="${cluster.ageHours(cluster.firstSeenEpochMs)} + ' h'">0 h</td>
+            <td class="small muted" th:text="${cluster.cause}">CAUSE</td>
+            <td class="small" th:text="${cluster.remediation}">REMEDY</td>
+          </tr>
+          <tr th:if="${#lists.isEmpty(clusters)}">
+            <td colspan="8" class="muted center">No failures in the monitoring window.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>The catalogue</h2>
+    <div class="scroll">
+      <table>
+        <thead><tr><th>Code</th><th>Severity</th><th>Cause</th><th>Remediation</th><th>Known cause</th></tr></thead>
+        <tbody>
+          <tr th:each="code : ${codes}">
+            <td class="nowrap">
+              <a th:href="@{'/errors/' + ${code.code}}"><code th:text="${code.code}">CODE</code></a>
+            </td>
+            <td class="nowrap">
+              <span class="sev" th:classappend="'sev-' + ${code.severity.cssClass()}"
+                    th:text="${code.severity}">SEV</span>
+            </td>
+            <td class="small" th:text="${code.cause}">CAUSE</td>
+            <td class="small muted" th:text="${code.remediation}">REMEDY</td>
+            <td class="nowrap muted" th:text="${code.common} ? 'yes' : 'no'">yes</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+</body>
+</html>

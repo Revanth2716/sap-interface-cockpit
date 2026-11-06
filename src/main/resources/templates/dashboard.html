@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Dashboard')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav('dashboard')}"></nav>
+
+<div class="page">
+  <div class="page-head between">
+    <div>
+      <h1>Integration cockpit</h1>
+      <p>What is broken, what it is caused by, and what to do about it.</p>
+    </div>
+    <form th:action="@{/scan}" method="post" class="no-print">
+      <button type="submit">Evaluate alert rules</button>
+    </form>
+  </div>
+
+  <div class="kpis">
+    <div class="kpi">
+      <div class="label">Interfaces</div>
+      <div class="value" th:text="${summary.interfaces}">0</div>
+      <div class="sub">in the catalogue</div>
+    </div>
+    <div class="kpi">
+      <div class="label">Messages</div>
+      <div class="value" th:text="${summary.messages}">0</div>
+      <div class="sub" th:text="'in the last ' + ${summary.windowHours} + ' h'">in the window</div>
+    </div>
+    <div class="kpi">
+      <div class="label">Failed</div>
+      <div class="value critical" th:text="${summary.errors}">0</div>
+      <div class="sub" th:text="${summary.errorRate} + '% of all calls'">0%</div>
+    </div>
+    <div class="kpi">
+      <div class="label">SLA breaches</div>
+      <div class="value high" th:text="${summary.slaBreaches}">0</div>
+      <div class="sub">interfaces below target</div>
+    </div>
+    <div class="kpi">
+      <div class="label">Open alerts</div>
+      <div class="value high" th:text="${summary.openAlerts}">0</div>
+      <div class="sub" th:text="${summary.clusters} + ' distinct causes'">0 causes</div>
+    </div>
+    <div class="kpi">
+      <div class="label">Queued replays</div>
+      <div class="value" th:text="${summary.queuedReplays}">0</div>
+      <div class="sub">waiting to be processed</div>
+    </div>
+  </div>
+
+  <div class="panel" th:if="${trend != null}">
+    <h2>Traffic - <span th:text="${trendInterface}">IFACE</span>
+      <span class="hint">the worst interface right now, last 24 hours</span></h2>
+    <div class="trend-wrap" th:utext="${trend}">SVG</div>
+    <div class="small muted">
+      Blue is traffic, red is the failed part of each hour. A red bar that
+      starts at 02:00 and never stops is not a spike - it is an incident.
+    </div>
+  </div>
+
+  <div class="grid cols-2">
+    <div class="panel">
+      <h2>Interfaces by health <span class="hint">worst first</span></h2>
+      <div class="scroll">
+        <table>
+          <thead>
+            <tr><th>Interface</th><th>Type</th><th>Success rate</th><th>SLA</th>
+              <th>Failed</th><th>p95</th></tr>
+          </thead>
+          <tbody>
+            <tr th:each="report : ${reports}">
+              <td class="nowrap">
+                <a th:href="@{'/interfaces/' + ${report.interfaceName}}"><code th:text="${report.interfaceName}">IFACE</code></a>
+              </td>
+              <td class="nowrap"><span class="pill" th:text="${report.type}">TYPE</span></td>
+              <td>
+                <div class="meter">
+                  <div class="track">
+                    <div class="fill" th:classappend="${report.breaching()} ? 'breach' : ''"
+                         th:style="'width:' + ${report.successRate} + '%'"></div>
+                  </div>
+                  <span class="value" th:text="${report.successRate} + '%'">0%</span>
+                </div>
+              </td>
+              <td class="nowrap muted" th:text="${report.slaPercent} + '%'">0%</td>
+              <td class="nowrap" th:text="${report.errors}">0</td>
+              <td class="nowrap muted" th:text="${report.p95Ms} + ' ms'">0 ms</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Error triage <span class="hint">one problem, not forty rows</span></h2>
+      <div class="scroll">
+        <table>
+          <thead><tr><th>Severity</th><th>Interface</th><th>Error</th><th>Count</th><th>Cause</th></tr></thead>
+          <tbody>
+            <tr th:each="cluster : ${clusters}">
+              <td class="nowrap">
+                <span class="sev" th:classappend="'sev-' + ${cluster.severity.cssClass()}"
+                      th:text="${cluster.severity}">SEV</span>
+              </td>
+              <td class="nowrap">
+                <a th:href="@{'/interfaces/' + ${cluster.interfaceName}}"><code th:text="${cluster.interfaceName}">IFACE</code></a>
+              </td>
+              <td class="nowrap">
+                <a th:href="@{'/errors/' + ${cluster.errorCode}}"><code th:text="${cluster.errorCode}">CODE</code></a>
+              </td>
+              <td class="nowrap" th:text="${cluster.occurrences}">0</td>
+              <td class="small muted" th:text="${cluster.cause}">CAUSE</td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(clusters)}">
+              <td colspan="5" class="muted center">No failures in the window.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid cols-2">
+    <div class="panel">
+      <h2>Open alerts</h2>
+      <div class="scroll">
+        <table>
+          <thead><tr><th>Severity</th><th>Interface</th><th>Rule</th><th>Message</th></tr></thead>
+          <tbody>
+            <tr th:each="alert : ${alerts}">
+              <td class="nowrap">
+                <span class="sev" th:classappend="'sev-' + ${alert.severity.cssClass()}"
+                      th:text="${alert.severity}">SEV</span>
+              </td>
+              <td class="nowrap"><code th:text="${alert.interfaceName}">IFACE</code></td>
+              <td class="nowrap muted small" th:text="${alert.rule}">RULE</td>
+              <td class="small" th:text="${alert.message}">MSG</td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(alerts)}">
+              <td colspan="4" class="muted center">
+                No open alerts - evaluate the rules to raise them.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Recent activity</h2>
+      <div class="scroll">
+        <table>
+          <thead><tr><th>When</th><th>Who</th><th>Action</th><th>Detail</th></tr></thead>
+          <tbody>
+            <tr th:each="entry : ${audit}">
+              <td class="muted small nowrap" th:text="${entry.atDisplay}">TS</td>
+              <td class="nowrap" th:text="${entry.username}">USER</td>
+              <td class="nowrap"><span class="pill" th:text="${entry.action}">ACTION</span></td>
+              <td class="muted small" th:text="${entry.detail}">DETAIL</td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(audit)}">
+              <td colspan="4" class="muted center">No activity recorded yet.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

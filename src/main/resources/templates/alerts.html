@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Alerts')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav('alerts')}"></nav>
+
+<div class="page">
+  <div class="page-head between">
+    <div>
+      <h1>Alerts</h1>
+      <p>Four rules, each one a question an integration team actually asks.</p>
+    </div>
+    <form th:action="@{/scan}" method="post" class="no-print">
+      <button type="submit">Evaluate rules now</button>
+    </form>
+  </div>
+
+  <div class="notice notice-info">
+    <strong>FAILURE_BURST</strong> - one interface failing repeatedly ·
+    <strong>SLA_BREACH</strong> - below the agreed success rate ·
+    <strong>LATENCY_BREACH</strong> - too slow ·
+    <strong>AGEING</strong> - a failure nobody has touched.
+  </div>
+
+  <div class="panel">
+    <h2><span th:text="${#lists.size(alerts)}">0</span> alerts</h2>
+    <div class="scroll">
+      <table>
+        <thead>
+          <tr><th>Severity</th><th>Interface</th><th>Rule</th><th>Message</th><th>Raised</th>
+            <th>State</th><th class="no-print"></th></tr>
+        </thead>
+        <tbody>
+          <tr th:each="alert : ${alerts}" th:classappend="${alert.acknowledged} ? 'muted' : ''">
+            <td class="nowrap">
+              <span class="sev" th:classappend="'sev-' + ${alert.severity.cssClass()}"
+                    th:text="${alert.severity}">SEV</span>
+            </td>
+            <td class="nowrap">
+              <a th:href="@{'/interfaces/' + ${alert.interfaceName}}"><code th:text="${alert.interfaceName}">IFACE</code></a>
+            </td>
+            <td class="nowrap muted small" th:text="${alert.rule}">RULE</td>
+            <td class="small" th:text="${alert.message}">MSG</td>
+            <td class="muted small nowrap" th:text="${alert.raisedAtDisplay}">TS</td>
+            <td class="nowrap small">
+              <span th:if="${alert.acknowledged}" th:text="'by ' + ${alert.acknowledgedBy}">ack</span>
+              <span th:if="${!alert.acknowledged}">open</span>
+            </td>
+            <td class="nowrap no-print">
+              <form th:action="@{'/alerts/' + ${alert.alertId} + '/ack'}" method="post"
+                    th:if="${!alert.acknowledged}">
+                <button class="secondary small" type="submit">Acknowledge</button>
+              </form>
+            </td>
+          </tr>
+          <tr th:if="${#lists.isEmpty(alerts)}">
+            <td colspan="7" class="muted center">
+              No alerts yet - evaluate the rules to raise them.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+</body>
+</html>

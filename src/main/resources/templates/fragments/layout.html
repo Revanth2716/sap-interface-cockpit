@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:fragment="head(title)">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title th:text="${title} + ' · ' + ${appName}">SAP Interface Cockpit</title>
+  <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+
+<nav th:fragment="nav(active)" class="topbar">
+  <div class="brand">
+    <span th:text="${appName}">SAP Interface Cockpit</span>
+    <span class="tag" th:text="${sapSystem}">NW7</span>
+  </div>
+
+  <div class="navlinks">
+    <a th:href="@{/}" th:classappend="${active == 'dashboard'} ? 'active'">Dashboard</a>
+    <a th:href="@{/interfaces}" th:classappend="${active == 'interfaces'} ? 'active'">Interfaces</a>
+    <a th:href="@{/errors}" th:classappend="${active == 'errors'} ? 'active'">Errors</a>
+    <a th:href="@{/alerts}" th:classappend="${active == 'alerts'} ? 'active'">Alerts</a>
+    <a th:href="@{/replay}" th:classappend="${active == 'replay'} ? 'active'"
+       th:if="${currentRole == 'OPS_ADMIN'}">Replay</a>
+  </div>
+
+  <div class="userbox">
+    <span th:text="${displayName}">User</span>
+    <span class="role" th:text="${currentRole}">ROLE</span>
+    <form th:action="@{/logout}" method="post" style="margin:0">
+      <button class="secondary small" type="submit">Sign out</button>
+    </form>
+  </div>
+</nav>
+
+</body>
+</html>
